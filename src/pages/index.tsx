@@ -27,10 +27,8 @@ export default function Home({ products }: HomeProps) {
         <HomeContainer ref={sliderRef} className="keen-slider">
             {products.map(product => {
                 return (
-                    <Link href={`/product/${product.id}`} key={product.id}>
-                        <Product
-                            className="keen-slider__slide"
-                        >
+                    <Link href={`/product/${product.id}`} key={product.id} prefetch={false}>
+                        <Product className="keen-slider__slide">
                             <Image src={product.imageUrl} width={520} height={480} alt="" />
 
                             <footer>
@@ -54,9 +52,9 @@ export const getStaticProps: GetStaticProps = async () => {
             id: product.id,
             name: product.name,
             imageUrl: product.images[0],
-            price: new Intl.NumberFormat('pt-BR', {
+            price: new Intl.NumberFormat('US', {
                 style: 'currency',
-                currency: 'BRL'
+                currency: 'EUR'
             }).format(price.unit_amount / 100),
         }
     })
