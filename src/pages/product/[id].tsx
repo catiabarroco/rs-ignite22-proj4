@@ -70,7 +70,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
         paths: [
             { params: { id: 'prod_NpKQDdzVuiEL6N' } },
         ],
-        fallback: true,
+        fallback: 'blocking',
     }
 }
 
@@ -79,7 +79,7 @@ export const getStaticProps: GetStaticProps<ProductProps,{ id: string }> = async
    if (!productId){
        return {
            redirect: {
-               destination: '/',
+               destination: '/404',
                permanent: false
            }
        }
