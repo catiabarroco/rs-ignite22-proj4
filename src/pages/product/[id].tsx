@@ -6,6 +6,7 @@ import { useState } from "react";
 import Stripe from "stripe";
 import { stripe } from "../../lib/stripe";
 import { ImageContainer, ProductContainer, ProductDetails } from "../../styles/pages/product"
+import {useRouter} from "next/router";
 interface ProductProps {
     product: {
         id: string
@@ -17,6 +18,8 @@ interface ProductProps {
     }
 }
 export default function Product({ product }: ProductProps) {
+    const { isFallback } = useRouter();
+
     const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] = useState(false);
     async function handleBuyButton() {
         try {
@@ -30,6 +33,10 @@ export default function Product({ product }: ProductProps) {
             setIsCreatingCheckoutSession(false);
             alert('Falha ao redirecionar ao checkout!')
         }
+    }
+
+    if (isFallback) {
+        return <h1>Loading</h1>;
     }
 
     return (
@@ -61,29 +68,25 @@ export default function Product({ product }: ProductProps) {
 export const getStaticPaths: GetStaticPaths = async () => {
     return {
         paths: [
-            { params: { id: 'prod_MLH5Wy0Y97hDAC' } },
+            { params: { id: 'prod_NpKQDdzVuiEL6N' } },
         ],
-        fallback: 'blocking',
+        fallback: true,
     }
 }
 
-export const getStaticProps: GetStaticProps<Record<string, any>, { id: string }> = async ({ params }) => {
-    if (!params){
-        return {
-            props:{},
-            redirect: {
-                destination: '/',
-                permanent: false
-            }
-        }
-    }
-
-    let {id:productId} = params
-    if (Array.isArray(productId)){
-        productId = productId[0]
-    }
+export const getStaticProps: GetStaticProps<ProductProps,{ id: string }> = async ({ params }) => {
+   const productId = params?.id;
+   if (!productId){
+       return {
+           redirect: {
+               destination: '/',
+               permanent: false
+           }
+       }
+   }
+try {
     const product = await stripe.products.retrieve(productId, {
-        expand: ['default_price']
+        expand: ['default_price'],
     });
 
     const price = product.default_price as Stripe.Price;
@@ -95,12 +98,20 @@ export const getStaticProps: GetStaticProps<Record<string, any>, { id: string }>
                 imageUrl: product.images[0],
                 price: new Intl.NumberFormat('US', {
                     style: 'currency',
-                    currency: 'EUR'
-                }).format(price.unit_amount / 100),
-                description: product.description,
-                defaultPriceId: price.id
-            }
+                    currency: 'EUR',
+                }).format((price?.unit_amount ?? 0) / 100),
+                description: product.description ?? '',
+                defaultPriceId: price.id,
+            },
         },
-        revalidate: 60 * 60 * 1 // 1 hours
+        revalidate: 60 * 60 * 1, // 1 hours
+    };
+} catch {
+    return {
+        redirect: {
+            destination: '/404',
+            permanent: false
+        }
     }
 }
+};
