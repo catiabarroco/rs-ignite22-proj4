@@ -66,11 +66,26 @@ export const getStaticPaths: GetStaticPaths = async () => {
         fallback: 'blocking',
     }
 }
-export const getStaticProps: GetStaticProps<any, { id: string }> = async ({ params }) => {
-    const productId = params.id;
+
+export const getStaticProps: GetStaticProps<Record<string, any>, { id: string }> = async ({ params }) => {
+    if (!params){
+        return {
+            props:{},
+            redirect: {
+                destination: '/',
+                permanent: false
+            }
+        }
+    }
+
+    let {id:productId} = params
+    if (Array.isArray(productId)){
+        productId = productId[0]
+    }
     const product = await stripe.products.retrieve(productId, {
         expand: ['default_price']
     });
+
     const price = product.default_price as Stripe.Price;
     return {
         props: {

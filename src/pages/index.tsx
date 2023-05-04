@@ -63,7 +63,7 @@ export const getStaticProps: GetStaticProps = async () => {
             price: new Intl.NumberFormat('US', {
                 style: 'currency',
                 currency: 'EUR'
-            }).format(price.unit_amount / 100),
+            }).format((price.unit_amount ?? 0) / 100),
         }
     })
     return {
